@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AETHERIS // Realtime Weather Intelligence Hub</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="A futuristic high-fidelity realtime rain & weather forecasting intelligence dashboard with custom radar maps, climate metrics, AI insights, and voice controls.">
+  <meta name="keywords" content="Weather, Forecast, Radar, Rainfall Tracker, AI Weather, Glassmorphism, Cyber Dashboard">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Leaflet CSS for Maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Background Rain Canvas -->
+  <canvas id="weather-canvas"></canvas>
+
+  <!-- Main Container -->
+  <div class="app-container">
+    
+    <!-- Header Section -->
+    <header id="header-main">
+      <div class="brand-section">
+        <div class="brand-logo">
+          <i class="fa-solid fa-cloud-bolt"></i>
+        </div>
+        <div class="brand-title">
+          <h1>AETHERIS</h1>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span>Weather Intelligence</span>
+            <span id="api-status-badge" class="api-status-badge"><span class="pulse-dot"></span> LOCAL MESH</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Interactive Search Control -->
+      <div class="search-controls">
+        <div class="search-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="search-input" class="search-input" placeholder="Search coordinates or city..." autocomplete="off">
+        </div>
+        <button id="voice-search-btn" class="utility-btn tooltip-trigger" data-tooltip="Voice Weather Search">
+          <i class="fa-solid fa-microphone"></i>
+        </button>
+        <button id="locate-btn" class="utility-btn tooltip-trigger" data-tooltip="Detect Location">
+          <i class="fa-solid fa-location-crosshairs"></i>
+        </button>
+      </div>
+
+      <!-- Theme & Unit Toggles -->
+      <div class="layout-controls">
+        <div class="toggle-group">
+          <button id="unit-c" class="toggle-item active">°C</button>
+          <button id="unit-f" class="toggle-item">°F</button>
+        </div>
+        <div class="toggle-group">
+          <button id="theme-dark" class="toggle-item active" aria-label="Dark Cyber Mode"><i class="fa-solid fa-moon"></i></button>
+          <button id="theme-light" class="toggle-item" aria-label="Aero Light Mode"><i class="fa-solid fa-sun"></i></button>
+        </div>
+      </div>
+
+      <!-- Realtime Clock -->
+      <div class="header-clock">
+        <span id="clock-time" class="clock-time">00:00:00 UTC</span>
+        <span id="clock-date" class="clock-date">FRIDAY, MAY 22, 2026</span>
+      </div>
+    </header>
+
+    <!-- Main Dashboard Grid Layout -->
+    <main class="dashboard-grid">
+
+      <!-- LEFT SIDEBAR: Live Weather Hero & AI Insights -->
+      <section class="sidebar-panel">
+        
+        <!-- Hero Weather Display -->
+        <div class="glass-panel hero-weather-card">
+          <div class="dashboard-loader" id="hero-loader">
+            <div class="spinner-cyber"></div>
+            <span class="loader-text">Syncing Satellites...</span>
+          </div>
+
+          <div class="hero-city-meta">
+            <h2 id="hero-city" class="hero-city-name">Tokyo <span id="hero-country" class="hero-country-badge">JP</span></h2>
+            <div id="weather-description" class="hero-weather-condition-desc">THUNDERSTORM ALERT</div>
+          </div>
+
+          <!-- Animated SVG Weather Icon -->
+          <div class="hero-weather-icon-container" id="weather-icon-container"></div>
+
+          <div class="hero-temp-display">
+            <span id="hero-temperature" class="hero-temp-val">19</span>
+            <span id="hero-unit-label" class="hero-temp-unit">°C</span>
+          </div>
+
+          <div class="hero-temp-range">
+            <span class="temp-hi"><i class="fa-solid fa-temperature-arrow-up"></i> Hi: <span id="temp-high">22°</span></span>
+            <span class="temp-lo"><i class="fa-solid fa-temperature-arrow-down"></i> Lo: <span id="temp-low">16°</span></span>
+          </div>
+
+          <div class="hero-divider"></div>
+
+          <!-- Extended Extra Details -->
+          <div class="hero-extra-detail">
+            <div class="hero-detail-item">
+              <span class="hero-detail-label">Feels Like</span>
+              <span id="detail-feels-like" class="hero-detail-value">18°C</span>
+            </div>
+            <div class="hero-detail-item">
+              <span class="hero-detail-label">Local Time</span>
+              <span id="detail-local-time" class="hero-detail-value">17:45</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Forecast Insights Panel -->
+        <div class="glass-panel ai-insights-panel">
+          <div class="ai-header">
+            <h3 class="ai-title"><i class="fa-solid fa-microchip-ai"></i> AETHER AI Core</h3>
+            <span class="ai-badge">Insights v3.5</span>
+          </div>
+
+          <div id="ai-alert-banner" class="ai-alert-banner">
+            <i id="ai-alert-icon" class="fa-solid fa-triangle-exclamation ai-alert-icon"></i>
+            <div class="ai-alert-text">
+              <h4 id="ai-alert-title">Active Rain Warning</h4>
+              <p id="ai-alert-desc">Precipitation exceeding 12mm/h expected inside next 30 mins.</p>
+            </div>
+          </div>
+
+          <div class="ai-insight-content">
+            <p id="ai-climate-analysis" class="ai-insight-paragraph">
+              A cold convective cell is colliding with coastal wind patterns, inducing rapid vertical air lift. This increases cloud volume and rainfall density across southern coordinates. Expect moderate to severe rain.
+            </p>
+            <div class="ai-recommendation-list">
+              <div class="ai-rec-item">
+                <i class="fa-solid fa-umbrella"></i>
+                <span id="ai-rec-1">Waterproof outer shell and umbrella advised.</span>
+              </div>
+              <div class="ai-rec-item">
+                <i class="fa-solid fa-car-burst"></i>
+                <span id="ai-rec-2">Slippery roads; reduce travel speed by 20%.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- CENTER CONTENT: Dashboard Analytics & Graphs -->
+      <section class="main-dashboard-panel">
+
+        <!-- Live Weather Dashboard Metrics Grid -->
+        <div class="metrics-grid">
+          
+          <!-- Humidity Card -->
+          <div class="glass-panel metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Humidity</span>
+              <i class="fa-solid fa-droplet metric-icon"></i>
+            </div>
+            <div class="metric-value-container">
+              <span id="metric-humidity" class="metric-value">84%</span>
+              <span id="metric-humidity-sub" class="metric-sub">Highly humid air</span>
+            </div>
+          </div>
+
+          <!-- Wind Speed Card -->
+          <div class="glass-panel metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Wind</span>
+              <i class="fa-solid fa-wind metric-icon"></i>
+            </div>
+            <div class="metric-value-container">
+              <span id="metric-wind" class="metric-value">18 km/h</span>
+              <div class="wind-illustration">
+                <div class="windmill-mast"></div>
+                <div id="windmill-blades" class="windmill-blades"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pressure Card -->
+          <div class="glass-panel metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Pressure</span>
+              <i class="fa-solid fa-gauge-high metric-icon"></i>
+            </div>
+            <div class="metric-value-container">
+              <span id="metric-pressure" class="metric-value">1011 hPa</span>
+              <span id="metric-pressure-sub" class="metric-sub">Steady system</span>
+            </div>
+          </div>
+
+          <!-- UV Index Card -->
+          <div class="glass-panel metric-card">
+            <div class="metric-header">
+              <span class="metric-title">UV Index</span>
+              <i class="fa-solid fa-sun metric-icon"></i>
+            </div>
+            <div class="metric-value-container">
+              <span id="metric-uv" class="metric-value">2 Low</span>
+              <div class="uv-gauge-bar">
+                <div id="uv-fill" class="uv-gauge-fill"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visibility Card -->
+          <div class="glass-panel metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Visibility</span>
+              <i class="fa-solid fa-eye metric-icon"></i>
+            </div>
+            <div class="metric-value-container">
+              <span id="metric-visibility" class="metric-value">9.8 km</span>
+              <span id="metric-visibility-sub" class="metric-sub">Slight mist</span>
+            </div>
+          </div>
+
+          <!-- Sunrise & Sunset Card -->
+          <div class="glass-panel metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Solar Cycle</span>
+              <i class="fa-solid fa-circle-notch metric-icon"></i>
+            </div>
+            <div class="metric-value-container">
+              <span id="metric-sunset" class="metric-value">18:54</span>
+              <div class="sunrise-arc-widget">
+                <div class="sunrise-arc-path"></div>
+                <div id="sun-node" class="sunrise-sun-node"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Rain Forecast Visualization & Analytics Section -->
+        <div class="analytics-section">
+          
+          <!-- Rain / Temperature Trend Chart -->
+          <div class="glass-panel">
+            <div class="chart-panel-header">
+              <h3 class="chart-title"><i class="fa-solid fa-chart-line"></i> Rain & Temperature Trends</h3>
+              <div class="chart-selector">
+                <button id="chart-btn-rain" class="chart-selector-btn active">Precipitation</button>
+                <button id="chart-btn-temp" class="chart-selector-btn">Hourly Temp</button>
+              </div>
+            </div>
+            <div class="canvas-container">
+              <canvas id="weather-trends-chart"></canvas>
+            </div>
+          </div>
+
+          <!-- Weekly Weather Forecast -->
+          <div class="glass-panel">
+            <div class="chart-panel-header">
+              <h3 class="chart-title"><i class="fa-solid fa-calendar-days"></i> 7-Day Forecast</h3>
+              <span class="metric-sub" id="forecast-location-label">Tokyo Regional</span>
+            </div>
+            <div class="weekly-forecast-grid" id="weekly-forecast-container"></div>
+          </div>
+
+        </div>
+
+        <!-- Weather Radar Map and Climate Comparison Section -->
+        <div class="map-radar-section">
+          
+          <!-- Live Weather Radar Map Card -->
+          <div class="glass-panel weather-map-card">
+            <div class="weather-map-header">
+              <h3 class="chart-title"><i class="fa-solid fa-satellite-dish"></i> Live Satellite Radar Sweep</h3>
+            </div>
+            <!-- Custom map container overlays -->
+            <div class="map-control-overlay">
+              <div class="map-layer-selector">
+                <button id="map-radar-toggle" class="map-layer-btn active"><i class="fa-solid fa-cloud-showers-heavy"></i> Radar Overlay</button>
+                <button id="map-satellite-toggle" class="map-layer-btn"><i class="fa-solid fa-satellite"></i> Satellite</button>
+              </div>
+            </div>
+            <!-- Leaflet node -->
+            <div class="map-wrapper" id="leaflet-map-node">
+              <svg class="radar-sweep-effect active" id="radar-sweep-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <circle cx="50" cy="50" r="2" fill="var(--accent-cyan)" />
+                <circle cx="50" cy="50" r="25" fill="none" stroke="var(--accent-cyan)" stroke-width="0.25" opacity="0.3" />
+                <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent-cyan)" stroke-width="0.25" opacity="0.2" stroke-dasharray="1 2" />
+                <line x1="50" y1="50" x2="50" y2="0" stroke="var(--accent-cyan)" stroke-width="0.5" transform-origin="50 50">
+                  <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="8s" repeatCount="indefinite" />
+                </line>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Climate Stats / Comparison -->
+          <div class="glass-panel climate-stats-card">
+            <h3 class="chart-title"><i class="fa-solid fa-circle-nodes"></i> Regional Climate Comparison</h3>
+            <div class="climate-stats-list">
+              
+              <!-- Stat Item 1 -->
+              <div class="climate-stat-item">
+                <div class="climate-stat-meta">
+                  <span class="climate-stat-name">Rainfall Accuracy index</span>
+                  <span class="climate-stat-val">98.4%</span>
+                </div>
+                <div class="climate-stat-progress">
+                  <div class="climate-stat-progress-fill" style="width: 98.4%; background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan));"></div>
+                </div>
+              </div>
+
+              <!-- Stat Item 2 -->
+              <div class="climate-stat-item">
+                <div class="climate-stat-meta">
+                  <span class="climate-stat-name">Air Quality Index (AQI)</span>
+                  <span id="climate-aqi-val" class="climate-stat-val">34 Good</span>
+                </div>
+                <div class="climate-stat-progress">
+                  <div id="climate-aqi-bar" class="climate-stat-progress-fill" style="width: 34%; background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));"></div>
+                </div>
+              </div>
+
+              <!-- Stat Item 3 -->
+              <div class="climate-stat-item">
+                <div class="climate-stat-meta">
+                  <span class="climate-stat-name">Precipitation Accumulation (24h)</span>
+                  <span id="climate-precip-val" class="climate-stat-val">14.8 mm</span>
+                </div>
+                <div class="climate-stat-progress">
+                  <div id="climate-precip-bar" class="climate-stat-progress-fill" style="width: 60%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));"></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Footer Area -->
+    <footer id="footer-main">
+      <div class="footer-credits">
+        Designed with futuristic telemetry and cyber dashboard grids. Powered by Aetheris Forecasting API & <a href="https://leafletjs.com/" target="_blank" rel="noopener">Leaflet</a>.
+      </div>
+      <div class="footer-links">
+        <a href="#" aria-label="System Metrics"><i class="fa-solid fa-server"></i></a>
+        <a href="#" aria-label="Satellite Feed"><i class="fa-solid fa-satellite-dish"></i></a>
+        <a href="https://github.com" target="_blank" rel="noopener" aria-label="GitHub Repository"><i class="fa-brands fa-github"></i></a>
+        <a href="mailto:support@aetheris-forecast.io" aria-label="Contact Support"><i class="fa-solid fa-envelope"></i></a>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Notification Toast Container -->
+  <div class="notifications-toaster" id="notifications-toaster">
+    <!-- Active climate alerts append dynamically here -->
+  </div>
+
+  <!-- Leaflet Javascript Library dependency -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <!-- Chart.js Library dependency -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Core Javascript Application Logic -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
